@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情報Ⅰデータベース学習</title>
+<style>
+    body { font-family: "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; margin: 0; padding: 0; background: #f3f4f6; color: #333; height: 100vh; display: flex; flex-direction: column; }
+    header { background: #4b5563; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { margin: 0; font-size: 1.1rem; font-weight: normal; }
+    main { display: grid; grid-template-columns: 260px 320px 1fr; gap: 10px; padding: 10px; flex: 1; overflow: hidden; }
+    
+    .panel { background: #fff; border: 1px solid #d1d5db; border-radius: 6px; display: flex; flex-direction: column; overflow: hidden; }
+    .panel-header { background: #f9fafb; padding: 8px 12px; font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid #d1d5db; }
+    .panel-content { padding: 10px; overflow-y: auto; flex: 1; }
+    
+    .tab-area { display: flex; border-bottom: 1px solid #d1d5db; background: #f9fafb; }
+    .tab-btn { flex: 1; padding: 8px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: #666; }
+    .tab-btn.active { color: #111827; border-bottom-color: #4b5563; font-weight: bold; background: white; }
+    
+    .btn { width: 100%; padding: 8px; background: #374151; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    
+    .op-tabs { display: flex; gap: 5px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+    .op-btn { padding: 4px 10px; border: 1px solid #ddd; background: #fff; border-radius: 15px; cursor: pointer; }
+    .op-btn.active { background: #374151; color: white; border-color: #374151; }
+    
+    .op-page { display: none; }
+    .op-page.active { display: block; }
+    
+    .input-group { margin-bottom: 10px; }
+    .input-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
+    .form-control { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+    th { background: #e5e7eb; position: sticky; top: 0; }
+    tr:nth-child(even) { background: #f9fafb; }
+    
+    #bottom-log { height: 150px; background: #1f2937; color: #eee; display: flex; flex-direction: column; padding: 10px; }
+    .log-line { border-bottom: 1px solid #374151; padding: 2px 0; font-family: monospace; font-size: 0.85rem; }
+    .log-ok { color: #34d399; }
+    .log-ng { color: #f87171; }
+    
+    .mini-btn { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; border: none; cursor: pointer; color: #333; font-weight: bold; margin-left: 5px; }
+</style>
+</head>
+<body>
+
+<!-- データ定義エリア（非表示）：JSのエラー回避のためHTMLで定義 -->
+<div style="display:none;">
+    <table id="raw_books">
+        <thead><tr><th>ISBN</th><th>書籍名</th><th>著者コード</th><th>分類コード</th></tr></thead>
+        <tbody>
+            <tr><td>978-4-00-33xx-xx-6</td><td>学問のすゝめ</td><td>JP015</td><td>370</td></tr>
+            <tr><td>978-4-90-36xx-xx-7</td><td>舞姫</td><td>JP821</td><td>910</td></tr>
+            <tr><td>978-4-04-40xx-xx-2</td><td>春琴抄</td><td>JP034</td><td>910</td></tr>
+            <tr><td>978-4-04-10xx-xx-1</td><td>雪国</td><td>JP194</td><td>910</td></tr>
+            <tr><td>978-4-10-11xx-xx-4</td><td>高熱隧道</td><td>JP701</td><td>910</td></tr>
+        </tbody>
+    </table>
+    <table id="raw_authors">
+        <thead><tr><th>著者コード</th><th>著者名</th></tr></thead>
+        <tbody>
+            <tr><td>JP015</td><td>福沢諭吉</td></tr>
+            <tr><td>JP821</td><td>森鴎外</td></tr>
+            <tr><td>JP034</td><td>谷崎潤一郎</td></tr>
+            <tr><td>JP194</td><td>川端康成</td></tr>
+            <tr><td>JP701</td><td>新田次郎</td></tr>
+        </tbody>
+    </table>
+    <table id="raw_categories">
+        <thead><tr><th>分類コード</th><th>分類名</th></tr></thead>
+        <tbody>
+            <tr><td>370</td><td>教育</td></tr>
+            <tr><td>910</td><td>日本文学</td></tr>
+            <tr><td>920</td><td>中国文学</td></tr>
+            <tr><td>930</td><td>英米文学</td></tr>
+            <tr><td>940</td><td>ドイツ文学</td></tr>
+            <tr><td>950</td><td>フランス文学</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<header>
+    <h1>情報Ⅰデータベース学習</h1>
+    <div style="background:rgba(255,255,255,0.9); padding:4px 10px; border-radius:4px;">
+        <label>課題:</label>
+        <select id="task_selector"></select>
+    </div>
+</header>
+
+<main>
+    <!-- 左パネル -->
+    <div class="panel">
+        <div class="panel-header">テーブル選択</div>
+        <div class="tab-area">
+            <button id="tab_books" class="tab-btn active">書籍</button>
+            <button id="tab_authors" class="tab-btn">著者</button>
+            <button id="tab_categories" class="tab-btn">分類</button>
+        </div>
+        <div class="panel-content">
+            <div id="source_view" style="overflow: auto; max-height: 300px;"></div>
+            <button id="btn_load" class="btn">このテーブルを読み込む</button>
+        </div>
+    </div>
+
+    <!-- 中央パネル -->
+    <div class="panel">
+        <div class="panel-header">操作パネル</div>
+        <div class="panel-content">
+            <div class="op-tabs">
+                <button id="op_tab_proj" class="op-btn active">射影</button>
+                <button id="op_tab_sel" class="op-btn">選択</button>
+                <button id="op_tab_join" class="op-btn">結合</button>
+                <button id="op_tab_grp" class="op-btn">集計</button>
+            </div>
+
+            <!-- 射影 -->
+            <div id="page_proj" class="op-page active">
+                <div class="input-group">
+                    <label>残す列を選択:</label>
+                    <div id="proj_list" style="border:1px solid #ddd; padding:5px;"></div>
+                </div>
+                <button id="btn_exec_proj" class="btn">射影を実行</button>
+            </div>
+
+            <!-- 選択 -->
+            <div id="page_sel" class="op-page">
+                <div class="input-group">
+                    <label>対象の列:</label>
+                    <select id="sel_col" class="form-control"></select>
+                </div>
+                <div class="input-group">
+                    <label>値 (完全一致):</label>
+                    <input type="text" id="sel_val" class="form-control" placeholder="値を入力">
+                </div>
+                <button id="btn_exec_sel" class="btn">選択を実行</button>
+            </div>
+
+            <!-- 結合 -->
+            <div id="page_join" class="op-page">
+                <div class="input-group">
+                    <label>結合する相手:</label>
+                    <select id="join_target" class="form-control"></select>
+                </div>
+                <div class="input-group">
+                    <label>自分のキー:</label>
+                    <select id="join_key_self" class="form-control"></select>
+                </div>
+                <div class="input-group">
+                    <label>相手のキー:</label>
+                    <select id="join_key_target" class="form-control"></select>
+                </div>
+                <button id="btn_exec_join" class="btn">結合を実行</button>
+            </div>
+
+            <!-- 集計 -->
+            <div id="page_grp" class="op-page">
+                <div class="input-group">
+                    <label>グループ化する列:</label>
+                    <select id="grp_col" class="form-control"></select>
+                </div>
+                <button id="btn_exec_grp" class="btn">集計を実行</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右パネル -->
+    <div class="panel">
+        <div class="panel-header">
+            結果表 <span id="row_count_display" style="font-weight:normal; margin-left:10px;">(0行)</span>
+        </div>
+        <div class="panel-content">
+            <div style="background:#e0f2fe; padding:10px; margin-bottom:10px; border-radius:4px;">
+                <div id="task_title" style="font-weight:bold; color:#0369a1;"></div>
+                <div id="task_desc" style="font-size:0.9rem;"></div>
+            </div>
+            <div id="result_view" style="overflow: auto;"></div>
+        </div>
+    </div>
+</main>
+
+<div id="bottom-log">
+    <div style="display:flex; align-items:center; margin-bottom:5px;">
+        <span style="font-weight:bold;">操作ログ</span>
+        <button id="btn_undo" class="mini-btn" style="background:#fbbf24;">1手戻る</button>
+        <button id="btn_reset" class="mini-btn" style="background:#f87171; color:white;">リセット</button>
+        <button id="btn_check" class="mini-btn" style="background:#34d399; color:white;">答え合わせ</button>
+        <span id="check_msg" style="font-weight:bold; margin-left:10px;"></span>
+    </div>
+    <div id="log_content" style="flex:1; overflow-y:auto; border-top:1px solid #555;"></div>
+</div>
+
+<script>
+// データ定義
+var DB = {};
+var TASKS = [];
+var STATE = { data: null, history: [], tab: "books" };
+
+// HTMLテーブルからデータを読み込む関数（安全策）
+function loadDataFromHTML(tableId) {
+    var table = document.getElementById(tableId);
+    var rows = table.querySelectorAll("tbody tr");
+    var headers = table.querySelectorAll("thead th");
+    var keys = [];
+    for(var h=0; h<headers.length; h++) keys.push(headers[h].textContent);
+    
+    var list = [];
+    for(var i=0; i<rows.length; i++) {
+        var cols = rows[i].querySelectorAll("td");
+        var obj = {};
+        for(var j=0; j<cols.length; j++) {
+            obj[keys[j]] = cols[j].textContent;
+        }
+        list.push(obj);
+    }
+    return list;
+}
+
+// 課題定義
+function initTasks() {
+    TASKS = [
+        { t: "書籍名の一覧", d: "「書籍」表から「書籍名」だけを取り出してください（射影）。", cols: ["書籍名"], rows: 5 },
+        { t: "910番の本", d: "「書籍」表から分類コードが「910」の行を選び、「書籍名」を表示してください。", cols: ["書籍名"], rows: 4, val: "雪国" },
+        { t: "著者名の表示", d: "「書籍」表に「著者」表を結合し、「書籍名」と「著者名」を表示してください。", cols: ["書籍名", "著者名"], rows: 5 },
+        { t: "日本文学の本", d: "「書籍」表と「分類」表を結合し、分類名が「日本文学」の行の「書籍名」を表示してください。", cols: ["書籍名"], rows: 4 },
+        { t: "完全な一覧", d: "3つの表すべてを結合し、「書籍名」「著者名」「分類名」を表示してください。", cols: ["書籍名", "著者名", "分類名"], rows: 5 },
+        { t: "分類ごとの冊数", d: "「書籍」と「分類」を結合し、分類名ごとの「書籍数」を集計してください。", cols: ["分類名", "書籍数"], rows: 2 }
+    ];
+}
+
+// 初期化
+window.onload = function() {
+    // データの読み込み
+    DB["books"] = loadDataFromHTML("raw_books");
+    DB["authors"] = loadDataFromHTML("raw_authors");
+    DB["categories"] = loadDataFromHTML("raw_categories");
+    
+    initTasks();
+    
+    // 課題プルダウン作成
+    var sel = document.getElementById("task_selector");
+    for (var i = 0; i < TASKS.length; i++) {
+        var opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "課題" + (i + 1);
+        sel.appendChild(opt);
+    }
+    updateTaskInfo();
+
+    // 結合ターゲット初期化
+    var tSel = document.getElementById("join_target");
+    var opts = [
+        {v:"authors", t:"著者"}, 
+        {v:"categories", t:"分類"}, 
+        {v:"books", t:"書籍"}
+    ];
+    for (var j = 0; j < opts.length; j++) {
+        var op = document.createElement("option");
+        op.value = opts[j].v;
+        op.textContent = opts[j].t;
+        tSel.appendChild(op);
+    }
+
+    renderTable(DB["books"], "source_view");
+    refreshView();
+    bindEvents();
+};
+
+function bindEvents() {
+    document.getElementById("task_selector").onclick = updateTaskInfo;
+    document.getElementById("task_selector").onchange = updateTaskInfo;
+
+    document.getElementById("tab_books").onclick = function(){ switchTab("books"); };
+    document.getElementById("tab_authors").onclick = function(){ switchTab("authors"); };
+    document.getElementById("tab_categories").onclick = function(){ switchTab("categories"); };
+
+    document.getElementById("op_tab_proj").onclick = function(){ switchOp("proj"); };
+    document.getElementById("op_tab_sel").onclick = function(){ switchOp("sel"); };
+    document.getElementById("op_tab_join").onclick = function(){ switchOp("join"); };
+    document.getElementById("op_tab_grp").onclick = function(){ switchOp("grp"); };
+
+    document.getElementById("btn_load").onclick = loadTable;
+    document.getElementById("btn_exec_proj").onclick = execProj;
+    document.getElementById("btn_exec_sel").onclick = execSel;
+    document.getElementById("btn_exec_join").onclick = execJoin;
+    document.getElementById("btn_exec_grp").onclick = execGrp;
+
+    document.getElementById("join_target").onchange = updateJoinKeys;
+
+    document.getElementById("btn_undo").onclick = undo;
+    document.getElementById("btn_reset").onclick = reset;
+    document.getElementById("btn_check").onclick = check;
+}
+
+function switchTab(name) {
+    STATE.tab = name;
+    renderTable(DB[name], "source_view");
+    var tabs = ["books", "authors", "categories"];
+    for(var i=0; i<tabs.length; i++) {
+        var el = document.getElementById("tab_" + tabs[i]);
+        if(tabs[i] === name) el.className = "tab-btn active";
+        else el.className = "tab-btn";
+    }
+}
+
+function switchOp(name) {
+    var ops = ["proj", "sel", "join", "grp"];
+    for(var i=0; i<ops.length; i++) {
+        var btn = document.getElementById("op_tab_" + ops[i]);
+        var page = document.getElementById("page_" + ops[i]);
+        if(ops[i] === name) {
+            btn.className = "op-btn active";
+            page.style.display = "block";
+        } else {
+            btn.className = "op-btn";
+            page.style.display = "none";
+        }
+    }
+}
+
+function loadTable() {
+    saveHist();
+    var src = DB[STATE.tab];
+    STATE.data = JSON.parse(JSON.stringify(src));
+    addLog("「" + STATE.tab + "」を読み込みました");
+    refreshView();
+    
+    // 自動選択
+    if(STATE.data.length > 0) {
+        var cols = Object.keys(STATE.data[0]);
+        var tSel = document.getElementById("join_target");
+        if(cols.indexOf("著者コード") >= 0) tSel.value = "authors";
+        else if(cols.indexOf("分類コード") >= 0) tSel.value = "categories";
+        updateJoinKeys();
+    }
+}
+
+function execProj() {
+    if(!STATE.data) return;
+    saveHist();
+    var div = document.getElementById("proj_list");
+    var checks = div.querySelectorAll("input");
+    var cols = [];
+    for(var i=0; i<checks.length; i++) {
+        if(checks[i].checked) cols.push(checks[i].value);
+    }
+    if(cols.length === 0) {
+        alert("列を選択してください");
+        STATE.history.pop();
+        return;
+    }
+    var newData = [];
+    for(var j=0; j<STATE.data.length; j++) {
+        var row = {};
+        for(var k=0; k<cols.length; k++) {
+            row[cols[k]] = STATE.data[j][cols[k]];
+        }
+        newData.push(row);
+    }
+    STATE.data = newData;
+    addLog("射影実行");
+    refreshView();
+}
+
+function execSel() {
+    if(!STATE.data) return;
+    var col = document.getElementById("sel_col").value;
+    var val = document.getElementById("sel_val").value;
+    if(!val) { alert("値を入力してください"); return; }
+    
+    saveHist();
+    var newData = [];
+    for(var i=0; i<STATE.data.length; i++) {
+        if(String(STATE.data[i][col]) === val) newData.push(STATE.data[i]);
+    }
+    STATE.data = newData;
+    addLog("選択実行: " + col + "=" + val);
+    refreshView();
+}
+
+function execJoin() {
+    if(!STATE.data) return;
+    var tName = document.getElementById("join_target").value;
+    var target = DB[tName];
+    var k1 = document.getElementById("join_key_self").value;
+    var k2 = document.getElementById("join_key_target").value;
+    
+    saveHist();
+    var newData = [];
+    for(var i=0; i<STATE.data.length; i++) {
+        var rowA = STATE.data[i];
+        for(var j=0; j<target.length; j++) {
+            var rowB = target[j];
+            if(rowA[k1] === rowB[k2]) {
+                var newRow = JSON.parse(JSON.stringify(rowA));
+                for(var key in rowB) {
+                    if(key !== k2) newRow[key] = rowB[key];
+                }
+                newData.push(newRow);
+            }
+        }
+    }
+    STATE.data = newData;
+    addLog("結合実行: " + tName);
+    refreshView();
+}
+
+function execGrp() {
+    if(!STATE.data) return;
+    var col = document.getElementById("grp_col").value;
+    saveHist();
+    var counts = {};
+    for(var i=0; i<STATE.data.length; i++) {
+        var val = STATE.data[i][col];
+        if(!counts[val]) counts[val] = 0;
+        counts[val]++;
+    }
+    var newData = [];
+    for(var k in counts) {
+        var row = {};
+        row[col] = k;
+        row["書籍数"] = counts[k];
+        newData.push(row);
+    }
+    STATE.data = newData;
+    addLog("集計実行");
+    refreshView();
+}
+
+function refreshView() {
+    var resEl = document.getElementById("result_view");
+    var cntEl = document.getElementById("row_count_display");
+    if(STATE.data) {
+        renderTable(STATE.data, "result_view");
+        cntEl.textContent = "(" + STATE.data.length + "行)";
+        updateCtrls();
+        document.getElementById("btn_exec_proj").disabled = false;
+        document.getElementById("btn_exec_sel").disabled = false;
+        document.getElementById("btn_exec_join").disabled = false;
+        document.getElementById("btn_exec_grp").disabled = false;
+    } else {
+        resEl.innerHTML = "";
+        var p = document.createElement("p");
+        p.style.color = "#888";
+        p.style.textAlign = "center";
+        p.style.padding = "2rem";
+        p.textContent = "左のテーブルを読み込んでください";
+        resEl.appendChild(p);
+        cntEl.textContent = "(0行)";
+        document.getElementById("btn_exec_proj").disabled = true;
+        document.getElementById("btn_exec_sel").disabled = true;
+        document.getElementById("btn_exec_join").disabled = true;
+        document.getElementById("btn_exec_grp").disabled = true;
+    }
+}
+
+function updateCtrls() {
+    if(!STATE.data || STATE.data.length === 0) return;
+    var cols = Object.keys(STATE.data[0]);
+
+    var div = document.getElementById("proj_list");
+    div.innerHTML = "";
+    for(var i=0; i<cols.length; i++) {
+        var label = document.createElement("label");
+        label.style.display = "block";
+        label.style.marginBottom = "3px";
+        var chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.value = cols[i];
+        chk.checked = true;
+        chk.style.marginRight = "5px";
+        label.appendChild(chk);
+        label.appendChild(document.createTextNode(cols[i]));
+        div.appendChild(label);
+    }
+
+    var ids = ["sel_col", "join_key_self", "grp_col"];
+    for(var k=0; k<ids.length; k++) {
+        var sel = document.getElementById(ids[k]);
+        sel.innerHTML = "";
+        for(var m=0; m<cols.length; m++) {
+            var opt = document.createElement("option");
+            opt.value = cols[m];
+            opt.textContent = cols[m];
+            sel.appendChild(opt);
+        }
+    }
+    updateJoinKeys();
+}
+
+function updateJoinKeys() {
+    var tName = document.getElementById("join_target").value;
+    if(!tName) return;
+    var target = DB[tName];
+    if(!target) return;
+    var cols = Object.keys(target[0]);
+    var sel = document.getElementById("join_key_target");
+    sel.innerHTML = "";
+    for(var i=0; i<cols.length; i++) {
+        var opt = document.createElement("option");
+        opt.value = cols[i];
+        opt.textContent = cols[i];
+        sel.appendChild(opt);
+    }
+    var selfKey = document.getElementById("join_key_self").value;
+    if(cols.indexOf(selfKey) >= 0) sel.value = selfKey;
+}
+
+function renderTable(data, elemId) {
+    var el = document.getElementById(elemId);
+    el.innerHTML = "";
+    if(!data || data.length === 0) return;
+
+    var tbl = document.createElement("table");
+    var thead = document.createElement("thead");
+    var tbody = document.createElement("tbody");
+    var trH = document.createElement("tr");
+    
+    var cols = Object.keys(data[0]);
+    for(var i=0; i<cols.length; i++) {
+        var th = document.createElement("th");
+        th.textContent = cols[i];
+        trH.appendChild(th);
+    }
+    thead.appendChild(trH);
+
+    for(var j=0; j<data.length; j++) {
+        var tr = document.createElement("tr");
+        for(var k=0; k<cols.length; k++) {
+            var td = document.createElement("td");
+            td.textContent = data[j][cols[k]];
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+    tbl.appendChild(thead);
+    tbl.appendChild(tbody);
+    el.appendChild(tbl);
+}
+
+function saveHist() {
+    if(STATE.data) {
+        STATE.history.push(JSON.parse(JSON.stringify(STATE.data)));
+    }
+}
+
+function undo() {
+    if(STATE.history.length > 0) {
+        STATE.data = STATE.history.pop();
+        addLog("元に戻しました");
+        refreshView();
+    }
+}
+
+function reset() {
+    STATE.data = null;
+    STATE.history = [];
+    addLog("リセットしました");
+    refreshView();
+}
+
+function updateTaskInfo() {
+    var idx = document.getElementById("task_selector").value;
+    var t = TASKS[idx];
+    document.getElementById("task_title").textContent = t.t;
+    document.getElementById("task_desc").textContent = t.d;
+    document.getElementById("check_msg").textContent = "";
+}
+
+function check() {
+    if(!STATE.data || STATE.data.length === 0) {
+        addLog("データがありません", "log-ng");
+        return;
+    }
+    var idx = document.getElementById("task_selector").value;
+    var task = TASKS[idx];
+    var cols = Object.keys(STATE.data[0]);
+    var msg = document.getElementById("check_msg");
+
+    var colOk = true;
+    if(cols.length !== task.cols.length) colOk = false;
+    else {
+        for(var i=0; i<task.cols.length; i++) {
+            if(cols.indexOf(task.cols[i]) < 0) colOk = false;
+        }
+    }
+
+    var rowOk = (STATE.data.length === task.rows);
+
+    var valOk = true;
+    if(task.val) {
+        var found = false;
+        for(var j=0; j<STATE.data.length; j++) {
+            for(var k in STATE.data[j]) {
+                if(String(STATE.data[j][k]).indexOf(task.val) >= 0) found = true;
+            }
+        }
+        if(!found) valOk = false;
+    }
+
+    if(colOk && rowOk && valOk) {
+        msg.textContent = "◎ 正解！";
+        msg.className = "log-ok";
+        addLog("正解！", "log-ok");
+    } else {
+        msg.textContent = "× 不正解";
+        msg.className = "log-ng";
+        addLog("不正解...", "log-ng");
+    }
+}
+
+function addLog(msg, cls) {
+    var box = document.getElementById("log_content");
+    var div = document.createElement("div");
+    div.className = "log-line " + (cls || "");
+    div.textContent = "> " + msg;
+    box.insertBefore(div, box.firstChild);
+}
+
+</script>
+
+</body>
+</html>
+    
+  </body>
+  
+</html>
